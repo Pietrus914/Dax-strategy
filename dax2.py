@@ -16,8 +16,11 @@ TP_CLOSE_POSITION_SELL = []
 SL_CLOSE_POSITION_SELL = []
 count_buy_list = []
 count_sell_list = []
-reward = 4
-risk = 2
+all_list = []
+buy_list = []
+sell_list = []
+reward = int(input("Chose your R:R level, enter reward: "))
+risk = int(input("Chose your R:R level, enter risk: "))
 
 path = '[DAX30]5.csv'
 
@@ -67,7 +70,7 @@ def box(DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM, ZAMKNIECIE):
             BOX_SIZE.append(box)
             list1.append([DATA[i], GODZ[i], OTWARCIE[i], MAXIMUM[i],MINIMUM[i], ZAMKNIECIE[i]])
     #print(BOX_SIZE)
-    #print(len(BOX_SIZE))
+    print(len(BOX_SIZE))
 
     #ustalenie czy box został wybity górą czy dołem, dodanie wyników do poszczególnych list
     for j in range(len(list1)):
@@ -87,7 +90,7 @@ def box(DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM, ZAMKNIECIE):
                         #print("wyjście dołem",DATA[l], GODZ[l], OTWARCIE[l])
                         list_down.append([DATA[l], GODZ[l], OTWARCIE[l]])
                         break
-
+    #print(len(list_up), list_up)
     return list_up, list_down, BOX_SIZE
 
 #print(box(DATA, GODZ, OTWARCIE, MAXIMUM,MINIMUM, ZAMKNIECIE))
@@ -97,8 +100,9 @@ def tp_sl_buy(list_up, BOX_SIZE, DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM):
     open_list_up = 2
     #reward = 3
     #risk = 2
+    
     for i in range(len(list_up)):
-          
+        
         for j in range(len(MAXIMUM)):
               
             if list_up[i][data_list_up] == DATA[j] and list_up[i][open_list_up] == OTWARCIE[j]:
@@ -191,9 +195,6 @@ def tp_sl_sell(list_down, BOX_SIZE, DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM):
 
 def win_lost_statistic(count_buy_list, count_sell_list):
     
-    all_list = []
-    buy_list = []
-    sell_list = []
     one_list_elem = 0
     win = 0
     lost = 1
@@ -204,35 +205,61 @@ def win_lost_statistic(count_buy_list, count_sell_list):
         all_lost = count_buy_list[one_list_elem][lost] + count_sell_list[one_list_elem][lost]
         all_positions = all_win + all_lost
         effectiveness = round((all_win / all_positions * 100), 2)
-        all_list.append([all_win, all_lost, effectiveness])
+        all_list.append([all_win, all_lost, effectiveness, all_positions])
 
         win_buy = count_buy_list[one_list_elem][win]
         lost_buy = count_buy_list[one_list_elem][lost]
         all_buy = count_buy_list[one_list_elem][win] + count_buy_list[one_list_elem][lost]
         effectiveness_buy = round((win_buy / all_buy * 100), 2)
-        buy_list.append([win_buy, lost_buy, effectiveness_buy])
+        buy_list.append([win_buy, lost_buy, effectiveness_buy, all_buy])
 
         win_sell = count_sell_list[one_list_elem][win]
         lost_sell = count_sell_list[one_list_elem][lost]
         all_sell = count_sell_list[one_list_elem][win] + count_sell_list[one_list_elem][lost]
         effectiveness_sell = round((win_sell / all_sell * 100), 2)
-        sell_list.append([win_sell, lost_sell, effectiveness_sell])
+        sell_list.append([win_sell, lost_sell, effectiveness_sell, all_sell])
 
-    return all_list, buy_list, sell_list
+    return sum(all_list, []), sum(buy_list, []), sum(sell_list, [])
 
 
 def print_stat(all_list, buy_list, sell_list):
+    first_elem = 0
+    wins = 0
+    lost = 1
+    effect = 2
+    all_enters = 3
+    saldo = int(get_input('Enter your max loss in dollars for one invest: '))
+    wins_money = saldo * all_list[first_elem][wins] * reward
+    lost_money = saldo * all_list[first_elem][lost] * risk
+    bilans = wins_money - lost_money
+
+    print()
+    print("/------------------------------------------------------------------------------------------------------------------------------------\\")
+    print(f"|  ALL POSITION                    - {all_list[first_elem][all_enters]}     |  BUY POSITION                    - {buy_list[first_elem][all_enters]}     |  SELL POSITION                    - {sell_list[first_elem][all_enters]}     |")
+    print("|-------------------------------------------|-------------------------------------------|--------------------------------------------|")
+    print(f"|  ALL WINS POSITION               - {all_list[first_elem][wins]}     |  BUY WINS POSITION               - {buy_list[first_elem][wins]}     |  SELL WINS POSITION               - {sell_list[first_elem][wins]}      |")
+    print("|-------------------------------------------|-------------------------------------------|--------------------------------------------|")
+    print(f"|  ALL LOST POSITION               - {all_list[first_elem][lost]}     |  BUY LOST POSITION               - {buy_list[first_elem][lost]}     |  SELL LOST POSITION               - {sell_list[first_elem][lost]}     |")
+    print("|-------------------------------------------|-------------------------------------------|--------------------------------------------|")
+    print(f"|  EFFECTIVENESS OF THE STRATEGY   - {all_list[first_elem][effect]}% |  EFFECTIVENESS OF BUY POSITION   - {all_list[first_elem][effect]}% |  EFFECTIVENESS OF SELL POSITION   - {sell_list[first_elem][effect]}% |")
+    print("\------------------------------------------------------------------------------------------------------------------------------------/")
+    print("/---------------------------------|")
+    print("|  {:10}        = {:^10} |".format("MAX RISK",saldo))
+    print("|  {:10}    = {:^10} |".format('ALL WINS MONEY', wins_money))
+    print("|  {:10}    = {:^10} |".format('ALL LOST MONEY', lost_money))
+    print("|  {:10}        = {:^10} |".format('BILANS',bilans))
+    print("\\---------------------------------/")
     pass
 
 def main():
     column()
-    reward = int(get_input("Chose your R:R level, enter reward: "))
-    risk = int(get_input("Chose your R:R level, enter risk: "))
-    saldo = int(get_input('Enter balance for investments in dollars: '))
+    
+    
     box(DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM, ZAMKNIECIE)
     tp_sl_buy(list_up, BOX_SIZE, DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM)
     tp_sl_sell(list_down, BOX_SIZE, DATA, GODZ, OTWARCIE, MAXIMUM, MINIMUM)
-    print(win_lost_statistic(count_buy_list, count_sell_list))
+    win_lost_statistic(count_buy_list, count_sell_list)
+    print_stat(all_list, buy_list, sell_list)
     
 
 main()
